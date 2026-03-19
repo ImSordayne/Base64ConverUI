@@ -1,0 +1,59 @@
+# This is a GitHub Actions workflow file
+name: build
+
+on:
+  push:
+    branches: [main, "!main/docs"]
+  pull_request:
+    branches: [main, "!main/docs"]
+
+jobs:
+  build-x86_64-windows:
+    runs-on: windows-latest
+    env: 
+      triplet: x64-windows-static
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      
+    steps:
+      - uses: actions/checkout@v6
+      - uses: TheMrMilchmann/setup-msvc-dev@v4.0.0
+        with:
+          arch: x64
+      
+      - name: 缓存vcpkg依赖
+        id: cache-vcpkg
+        uses: actions/cache@v5
+        with:
+          path: |
+            ${{ github.workspace }}/build/vcpkg_installed
+
+          key: vcpkg-${{ runner.os }}-${{ env.triplet }}-${{ hashFiles('**/vcpkg.json', '**/*.vcpkg') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-${{ env.triplet }}-
+      
+      - name: 生成 CMake 缓存
+        shell: cmd
+        run: |
+          cmake -S ${{ github.workspace }} -B ${{ github.workspace }}/build -G Ninja ^
+          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" ^
+          -DVCPKG_TARGET_TRIPLET=${{ env.triplet }} ^
+          -DCCL_STATIC_RUNTIME=ON ^
+          -DCCL_Qt_UI=ON
+          
+      - name: Windows x86_64 编译
+        shell: cmd
+        run: |
+          cmake --build build
+          
+      - name: 安装到临时目录
+        shell: cmd
+        run: |
+          cmake --install ${{ github.workspace }}/build ${{ runner.temp }}/Install
+          
+      - name: 上传 Windows x86_64 构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x86_64
+          path: ${{ runner.temp }}/Install
+          retention-days: 30
+ 
