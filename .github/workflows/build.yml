@@ -26,7 +26,9 @@ jobs:
         shell: cmd
         run: |
           echo "VCPKG_ROOT=D:\vcpkg" >> %GITHUB_ENV%
-          echo "D:\vcpkg" >> %GITHUB_PATH%
+          copy %GITHUB_PATH% %GITHUB_PATH%.backup
+          echo "D:\vcpkg" > %GITHUB_PATH%
+          type %GITHUB_PATH%.backup >> %GITHUB_PATH%
 
       - name: 检查环境
         shell: cmd
