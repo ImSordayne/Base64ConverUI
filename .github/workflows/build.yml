@@ -25,14 +25,15 @@ jobs:
       - name: 设置运行变量
         shell: cmd
         run: |
-          set VCPKG_ROOT=D:\vcpkg
-          set PATH=%VCPKG_ROOT%;%PATH%
+          echo "VCPKG_ROOT=D:\vcpkg" >> %GITHUB_ENV%
+          echo "D:\vcpkg" >> %GITHUB_PATH%
 
       - name: 检查环境
         shell: cmd
         run: |
           where ninja.exe || echo "ninja not found"
           where cl.exe || echo "cl not found"
+          where vcpkg.exe || echo "vcpkg not found"
                 
       - name: 安装 vcpkg
         shell: cmd
