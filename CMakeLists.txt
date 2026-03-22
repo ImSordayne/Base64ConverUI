@@ -23,3 +23,28 @@ target_link_libraries(Base64ConverUI
     Qt6::Core
     Qt6::Widgets
 )
+
+qt_generate_deploy_script(
+    TARGET Base64ConverUI
+    OUTPUT_SCRIPT deploy_script
+    CONTENT "
+qt_deploy_runtime_dependencies(
+    EXECUTABLE \"$<TARGET_FILE:Base64ConverUI>\"
+    GENERATE_QT_CONF
+    VERBOSE
+)"
+)
+
+install(TARGETS Base64ConverUI
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    BUNDLE  DESTINATION .
+)
+install(SCRIPT ${deploy_script})
+
+set(APPS "\${CMAKE_INSTALL_PREFIX}/bin/Base64ConverUI.exe")
+set(DIRS "${CMAKE_BINARY_DIR}")
+
+install(CODE "
+    include(BundleUtilities)
+    fixup_bundle(\"${APPS}\" \"\" \"${DIRS}\")
+" COMPONENT Runtime)

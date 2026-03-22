@@ -11,7 +11,8 @@ jobs:
   build-x86_64-windows:
     runs-on: windows-latest
     env: 
-      triplet: x64-windows-static
+      triplet: x64-windows
+      VCPKG_ROOT: D:\vcpkg
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
       
     steps:
@@ -24,53 +25,52 @@ jobs:
       - name: 检查环境
         shell: cmd
         run: |
-          echo Ninja path:
-          where ninja.exe
-          echo Version:
-          ninja --version
-          echo cl path:
-          where cl.exe
-          echo Version:
-          cl
-
+          where ninja.exe || echo "ninja not found"
+          where cl.exe || echo "cl not found"
+                
       - name: 安装 vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgJsonGlob: '**/vcpkg.json'
+        shell: cmd
+        run: |
+          if not exist ${{ env.VCPKG_ROOT }} (
+            git clone https://github.com/microsoft/vcpkg ${{ env.VCPKG_ROOT }}
+            call ${{ env.VCPKG_ROOT }}\bootstrap-vcpkg.bat
+          ) else (
+            echo "vcpkg already exists"
+          )
+          echo "VCPKG_ROOT=${{ env.VCPKG_ROOT }}" >> %GITHUB_ENV%
+          echo "%VCPKG_ROOT%" >> %GITHUB_PATH%
       
       - name: 缓存 vcpkg 依赖
         id: cache-vcpkg
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: |
-            ${{ github.workspace }}/vcpkg_installed
-          key: vcpkg-${{ runner.os }}-${{ env.triplet }}-${{ hashFiles('**/vcpkg.json', '**/*.vcpkg') }}
+            ${{ github.workspace }}\build\vcpkg_installed
+          key: vcpkg-${{ runner.os }}-${{ env.triplet }}-${{ hashFiles('vcpkg.json', 'CMakeLists.txt') }}
           restore-keys: |
             vcpkg-${{ runner.os }}-${{ env.triplet }}-
       
       - name: 生成 CMake 缓存
         shell: cmd
         run: |
-          cmake -S ${{ github.workspace }} -B ${{ github.workspace }}/build -G Ninja ^
-          -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" ^
+          cmake -S ${{ github.workspace }} -B ${{ github.workspace }}\build -G Ninja ^
+          -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}\scripts\buildsystems\vcpkg.cmake" ^
           -DVCPKG_TARGET_TRIPLET=${{ env.triplet }} ^
-          -DCCL_STATIC_RUNTIME=ON ^
-          -DCCL_Qt_UI=ON
+          -DCMAKE_BUILD_TYPE=Release
           
-      - name: Windows x86_64 编译
+      - name: 编译项目
         shell: cmd
         run: |
-          cmake --build build
+          cmake --build build --config Release --parallel
           
       - name: 安装到临时目录
         shell: cmd
         run: |
-          cmake --install ${{ github.workspace }}/build --prefix ${{ runner.temp }}/Install
+          cmake --install ${{ github.workspace }}\build --prefix ${{ runner.temp }}\Install --config Release
           
-      - name: 上传 Windows x86_64 构建产物
+      - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
           name: windows-x86_64
-          path: ${{ runner.temp }}/Install
+          path: ${{ runner.temp }}\Install
           retention-days: 30
