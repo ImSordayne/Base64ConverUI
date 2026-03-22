@@ -21,14 +21,6 @@ jobs:
       - uses: TheMrMilchmann/setup-msvc-dev@v4.0.0
         with:
           arch: x64
-      
-      - name: 设置运行变量
-        shell: cmd
-        run: |
-          echo "VCPKG_ROOT=D:\vcpkg" >> %GITHUB_ENV%
-          copy %GITHUB_PATH% %GITHUB_PATH%.backup
-          echo "D:\vcpkg" > %GITHUB_PATH%
-          type %GITHUB_PATH%.backup >> %GITHUB_PATH%
 
       - name: 检查环境
         shell: cmd
@@ -36,18 +28,6 @@ jobs:
           where ninja.exe || echo "ninja not found"
           where cl.exe || echo "cl not found"
           where vcpkg.exe || echo "vcpkg not found"
-                
-      - name: 安装 vcpkg
-        shell: cmd
-        run: |
-          if not exist ${{ env.VCPKG_ROOT }} (
-            git clone https://github.com/microsoft/vcpkg ${{ env.VCPKG_ROOT }}
-            call ${{ env.VCPKG_ROOT }}\bootstrap-vcpkg.bat
-          ) else (
-            echo "vcpkg already exists"
-          )
-          echo "VCPKG_ROOT=${{ env.VCPKG_ROOT }}" >> %GITHUB_ENV%
-          echo "%VCPKG_ROOT%" >> %GITHUB_PATH%
       
       - name: 缓存 vcpkg 依赖
         id: cache-vcpkg
