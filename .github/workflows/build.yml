@@ -17,13 +17,16 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       
-      - name: 安装 Ninja
-        run: choco install ninja -y
-      
       - uses: TheMrMilchmann/setup-msvc-dev@v4.0.0
         with:
           arch: x64
       
+      - name: 检查环境
+        shell: cmd
+        run: |
+          "echo Ninja path: & where ninja.exe & echo Version: & ninja --version"
+          "echo cl path: & where cl.exe & echo Version: & cl /Bv"
+
       - name: 安装 vcpkg
         uses: lukka/run-vcpkg@v11
         with:
