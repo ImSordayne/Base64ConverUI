@@ -22,6 +22,12 @@ jobs:
         with:
           arch: x64
       
+      - name: 设置运行变量
+        shell: cmd
+        run: |
+          set VCPKG_ROOT=D:\vcpkg
+          set PATH=%VCPKG_ROOT%;%PATH%
+
       - name: 检查环境
         shell: cmd
         run: |
