@@ -24,8 +24,14 @@ jobs:
       - name: 检查环境
         shell: cmd
         run: |
-          "echo Ninja path: & where ninja.exe & echo Version: & ninja --version"
-          "echo cl path: & where cl.exe & echo Version: & cl /Bv"
+          echo Ninja path:
+          where ninja.exe
+          echo Version:
+          ninja --version
+          echo cl path:
+          where cl.exe
+          echo Version:
+          cl /Bv
 
       - name: 安装 vcpkg
         uses: lukka/run-vcpkg@v11
