@@ -31,7 +31,7 @@ jobs:
           echo cl path:
           where cl.exe
           echo Version:
-          cl /Bv
+          cl
 
       - name: 安装 vcpkg
         uses: lukka/run-vcpkg@v11
